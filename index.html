@@ -104,12 +104,13 @@ canvas{width:100%;max-width:calc((100dvh - 130px) * 17 / 9);aspect-ratio:17/9;bo
 // ===== 馬のデータ =====
 // v: 毎ターンの速さ（p=進んだ距離0〜100、r=0〜1の乱数）
 // st: 表示用の能力 [スピード, スタミナ, 運]（1〜5）
+// mood: レースごとの調子（ある馬だけ。1より大きいと絶好調）
 const H=[
-{n:'モッチリエンペラー',c:'#D4537E',t:'もちもちでバナナが効かない',st:[2,4,4],nob:true,v:(p,r)=>.9*(.6+r*.8)},
+{n:'モッチリエンペラー',c:'#D4537E',t:'バナナが効かない、終盤に粘る',st:[3,4,4],nob:true,v:(p,r)=>.98*(.6+r*.8)*(p>80?1.1:1)},
 {n:'ササカマスプリント',c:'#1D9E75',t:'スタート爆速、すぐバテる',st:[5,1,3],v:(p,r)=>1.05*(.6+r*.8)*(p<30?1.6:p>60?.7:1)},
 {n:'ロジャーアイアン',c:'#378ADD',t:'いつでも安定',st:[3,3,3],v:(p,r)=>.85+r*.3},
 {n:'ウィンタードリーム',c:'#7F77DD',t:'最後の直線で覚醒',st:[2,5,3],v:(p,r)=>.88*(.6+r*.8)*(p>70?1.7:1)},
-{n:'ミオノキマグレ',c:'#BA7517',t:'気分屋、事件を呼ぶ',st:[3,2,1],v:(p,r)=>.95*(.2+r*1.6)}];
+{n:'ミオノキマグレ',c:'#BA7517',t:'気分屋、絶好調の日は止まらない',st:[4,2,1],mood:()=>.75+Math.random()*.6,v:(p,r)=>1.05*(.2+r*1.6)}];
 
 // ===== 設定 =====
 const EVENT_RATE=.045;  // 1ターンあたりの事件発生率
@@ -119,8 +120,9 @@ const VW=680,VH=360,START=60,LEN=2400,FIN=START+LEN;
 const worldX=p=>START+p*LEN/100, LY=i=>141+i*42;
 
 // ===== レースの処理（画面と切り離してあるのでシミュレーションにも使う） =====
-function newRace(){return H.map(()=>({p:0,q:0,stun:0,rev:0,gone:0,boost:0,done:0,ph:0,mv:0}))}
-function pickTarget(S){const c=[0,1,2,3,4,4,4].filter(i=>!S[i].done&&!S[i].gone);return c.length?c[Math.floor(Math.random()*c.length)]:-1}
+function newRace(){return H.map(h=>({p:0,q:0,stun:0,rev:0,gone:0,boost:0,done:0,ph:0,mv:0,mood:h.mood?h.mood():1}))}
+// 事件のターゲット選び（4番=ミオノキマグレは2倍巻き込まれやすい）
+function pickTarget(S){const c=[0,1,2,3,4,4].filter(i=>!S[i].done&&!S[i].gone);return c.length?c[Math.floor(Math.random()*c.length)]:-1}
 function applyEvent(S,out){
   const i=pickTarget(S);if(i<0)return;
   const k=Math.floor(Math.random()*6),h=H[i],s=S[i],wx=worldX(s.p),y=LY(i);
@@ -141,7 +143,7 @@ function step(S,ord,out){
     if(s.done)return;
     if(s.gone){s.gone--;if(!s.gone)say(`${H[i].n}、UFOから帰ってきた！`);return}
     if(s.stun){s.stun--;return}
-    let v=H[i].v(s.p,Math.random());
+    let v=H[i].v(s.p,Math.random())*s.mood;
     if(s.boost){s.boost--;v*=1.8}
     if(s.rev){s.rev--;v=-v*.6}
     s.mv=v;s.p=Math.max(0,s.p+v*.85);
@@ -332,7 +334,11 @@ function draw(al){
 function tickRace(){fx.forEach(f=>f.t--);fx=fx.filter(f=>f.t>0);if(banner.t>0&&banner.t<1e8)banner.t--;step(S,order,OUT);if(order.length==5)finish()}
 function loop(t){
   const dt=Math.min(t-last,100);last=t;
-  if(phase=='count'&&t-cdStart>=3000){phase='race';acc=0;say('スタート！')}
+  if(phase=='count'&&t-cdStart>=3000){
+    phase='race';acc=0;say('スタート！');
+    // 調子のある馬は、スタート時に実況で調子を発表
+    S.forEach((s,i)=>{if(!H[i].mood)return;if(s.mood>1.15)say(`${H[i].n}、今日は絶好調だ！`);else if(s.mood<.85)say(`${H[i].n}、やる気ゼロの顔をしている…`)});
+  }
   if(phase=='race'){acc+=dt;while(acc>=100&&phase=='race'){acc-=100;tickRace()}}
   if(phase=='race'||phase=='result')gate=Math.min(1,gate+dt/500);
   draw(phase=='race'?acc/100:1);
