@@ -2,128 +2,252 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>カオス馬レース</title>
 <style>
-:root{
-  --text-primary:#2C2C2A;--text-secondary:#5F5E5A;--text-danger:#A32D2D;--text-success:#3B6D11;
-  --text-accent:#185FA5;--bg-accent:#E6F1FB;--border-accent:#378ADD;
-  --surface-0:#FAF9F5;--surface-1:#F1EFE8;--surface-2:#FFFFFF;--border:rgba(0,0,0,.15);--radius:8px;
-}
-@media (prefers-color-scheme: dark){
-  :root{
-    --text-primary:#F1EFE8;--text-secondary:#B4B2A9;--text-danger:#F09595;--text-success:#97C459;
-    --text-accent:#B5D4F4;--bg-accent:#0C447C;--border-accent:#85B7EB;
-    --surface-0:#1F1E1D;--surface-1:#2C2C2A;--surface-2:#262624;--border:rgba(255,255,255,.18);
-  }
-}
+:root{--text-primary:#2C2C2A;--text-secondary:#5F5E5A;--text-danger:#A32D2D;--text-success:#3B6D11;--surface-0:#FAF9F5;--surface-1:#F1EFE8;--surface-2:#FFFFFF;--border:rgba(0,0,0,.14);--fill-accent:#185FA5;--radius:10px}
+@media (prefers-color-scheme:dark){:root{--text-primary:#F1EFE8;--text-secondary:#B4B2A9;--text-danger:#F09595;--text-success:#97C459;--surface-0:#1F1E1D;--surface-1:#2C2C2A;--surface-2:#262624;--border:rgba(255,255,255,.16);--fill-accent:#378ADD}}
 *{box-sizing:border-box}
 body{margin:0;background:var(--surface-0);color:var(--text-primary);font-family:system-ui,-apple-system,"Hiragino Sans","Noto Sans JP",sans-serif}
-.wrap{max-width:720px;margin:0 auto;padding:1.5rem 1rem}
-h1{font-size:22px;font-weight:500;margin:0 0 1rem}
-button{font:inherit;font-size:14px;color:var(--text-primary);background:transparent;border:0.5px solid var(--text-secondary);border-radius:var(--radius);padding:6px 12px;cursor:pointer}
-button:hover{background:var(--surface-1)}
-input{font:inherit;font-size:14px;color:var(--text-primary);background:var(--surface-2);border:0.5px solid var(--text-secondary);border-radius:var(--radius);padding:6px 8px;height:34px}
-.stat{background:var(--surface-1);border-radius:var(--radius);padding:12px}
-.stat .lb{font-size:13px;color:var(--text-secondary)}
-.stat .v{font-size:24px;font-weight:500}
-.hc{border:0.5px solid var(--border);border-radius:var(--radius);padding:8px 10px;cursor:pointer;background:var(--surface-2);text-align:left}
-.hc.sel{border:2px solid var(--border-accent);padding:7px 9px}
-.seg button.on{background:var(--bg-accent);color:var(--text-accent);border-color:var(--border-accent)}
+.wrap{max-width:760px;margin:0 auto;padding:1.25rem 1rem 2rem}
+header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem}
+h1{font-size:22px;font-weight:500;margin:0}
+button{font:inherit;font-size:14px;color:var(--text-primary);background:transparent;border:0.5px solid var(--text-secondary);border-radius:var(--radius);padding:7px 12px;cursor:pointer}
+button:hover:not(:disabled){background:var(--surface-1)}
+button:disabled,input:disabled{opacity:.45;cursor:not-allowed}
+input{font:inherit;font-size:16px;color:var(--text-primary);background:var(--surface-2);border:0.5px solid var(--text-secondary);border-radius:var(--radius);padding:6px 10px;height:38px;width:110px}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:12px}
+.stat{background:var(--surface-1);border-radius:var(--radius);padding:10px 12px}
+.stat .lb{font-size:12px;color:var(--text-secondary)}
+.stat .v{font-size:22px;font-weight:500;font-variant-numeric:tabular-nums}
+canvas{width:100%;aspect-ratio:17/9;border-radius:14px;display:block}
+#log{font-size:14px;line-height:1.7;height:110px;overflow:hidden;background:var(--surface-1);border-radius:var(--radius);padding:8px 12px;margin:10px 0 0}
+#log div:first-child{font-weight:500}
+#res{font-size:16px;font-weight:500;margin:10px 0;min-height:22px}
+.board{background:#1C1C1A;border-radius:14px;padding:12px;color:#F1EFE8;margin-bottom:14px}
+.bhead{display:flex;justify-content:space-between;align-items:baseline;font-size:13px;color:#B4B2A9;margin-bottom:8px;padding:0 4px}
+.bcols,.row{display:grid;grid-template-columns:30px minmax(0,1fr) 70px 70px;gap:10px;align-items:center}
+.bcols{font-size:11px;color:#888780;padding:0 8px 2px}
+.bcols span:nth-child(n+3){text-align:right}
+.row{width:100%;text-align:left;background:#262624;border:1px solid #3a3a37;border-radius:10px;padding:8px;margin-top:6px;color:#F1EFE8}
+.row:hover:not(:disabled){background:#2f2f2c}
+.row.sel{border:2px solid #FAC775;padding:7px}
+.num{width:26px;height:26px;border-radius:50%;color:#fff;font-size:13px;font-weight:500;display:flex;align-items:center;justify-content:center}
+.info{display:block;min-width:0}
+.nm{display:block;font-size:15px;font-weight:500}
+.tr{display:block;font-size:12px;color:#B4B2A9;margin:2px 0 4px}
+.bars{display:flex;flex-wrap:wrap;gap:10px;font-size:11px;color:#B4B2A9}
+.bar{display:inline-flex;gap:2px;margin-left:3px;vertical-align:middle}
+.bar i{width:7px;height:7px;border-radius:2px;background:#444441}
+.bar i.on{background:#9FE1CB}
+.ow{font-family:ui-monospace,Menlo,monospace;font-size:20px;color:#FAC775;text-align:right}
+.ol{font-family:ui-monospace,Menlo,monospace;font-size:16px;color:#9FE1CB;text-align:right}
+.panel{background:var(--surface-2);border:0.5px solid var(--border);border-radius:14px;padding:12px 14px}
+.prow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:8px}
+.seg{display:flex;gap:4px}
+.seg button.on{background:#E6F1FB;color:#0C447C;border-color:#378ADD}
+#pickLabel{font-size:14px;color:var(--text-secondary);margin-left:auto}
+#preview{font-size:15px;font-weight:500}
+#go{margin-left:auto;background:var(--fill-accent);color:#fff;border-color:transparent;padding:9px 18px;font-weight:500}
+#go:hover:not(:disabled){background:var(--fill-accent);filter:brightness(1.1)}
+#err{font-size:13px;color:var(--text-danger);min-height:18px}
+@media (max-width:600px){
+  .panel{position:fixed;left:0;right:0;bottom:0;border-radius:16px 16px 0 0;padding:12px 14px calc(12px + env(safe-area-inset-bottom));z-index:10}
+  body{padding-bottom:220px}
+  button{min-height:44px}
+  .tr{display:none}
+  .bcols,.row{grid-template-columns:28px minmax(0,1fr) 58px 58px}
+  .ow{font-size:18px}
+}
 </style>
 </head>
 <body>
 <div class="wrap">
-<h1>カオス馬レース</h1>
-<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:1rem">
-  <div class="stat"><div class="lb">所持金</div><div id="money" class="v">1000円</div></div>
-  <div class="stat"><div class="lb">レース数</div><div id="rc" class="v">0</div></div>
-  <div class="stat"><div class="lb">最高所持金</div><div id="best" class="v">1000円</div></div>
-</div>
-<canvas id="cv" style="width:100%;aspect-ratio:2/1;border-radius:12px;display:block;margin-bottom:12px"></canvas>
-<div id="cards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-bottom:12px"></div>
-<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:6px">
-  <div class="seg" style="display:flex;gap:4px"><button id="bt1" class="on">1着に賭ける</button><button id="bt2">最下位に賭ける</button></div>
-  <input id="amt" type="number" min="1" step="1" value="100" style="width:100px">
-  <span style="font-size:14px;color:var(--text-secondary)">円</span>
-  <button id="half">半分</button><button id="all">全額</button>
-  <button id="go">▶ レース開始</button>
-</div>
-<div id="err" style="font-size:13px;color:var(--text-danger);min-height:18px;margin-bottom:6px"></div>
-<div id="log" style="font-size:14px;line-height:1.7;min-height:100px;background:var(--surface-1);border-radius:var(--radius);padding:10px 12px"></div>
-<div id="res" style="font-size:16px;font-weight:500;margin-top:12px"></div>
+  <header><h1>カオス馬レース</h1><button id="reset">最初から</button></header>
+  <div class="stats">
+    <div class="stat"><div class="lb">所持金</div><div id="money" class="v">1,000円</div></div>
+    <div class="stat"><div class="lb">レース数</div><div id="rc" class="v">0</div></div>
+    <div class="stat"><div class="lb">最高所持金</div><div id="best" class="v">1,000円</div></div>
+  </div>
+  <canvas id="cv"></canvas>
+  <div id="log"></div>
+  <div id="res"></div>
+  <section class="board">
+    <div class="bhead"><span>オッズ</span><span>5000回のシミュレーションで算出</span></div>
+    <div class="bcols"><span>番</span><span>馬名</span><span>1着</span><span>最下位</span></div>
+    <div id="rows"></div>
+  </section>
+  <section class="panel">
+    <div class="prow"><div class="seg"><button id="bt1" class="on">1着に賭ける</button><button id="bt2">最下位に賭ける</button></div><span id="pickLabel"></span></div>
+    <div class="prow"><input id="amt" type="number" min="1" step="1" value="100" inputmode="numeric"><span>円</span>
+      <button class="chip" data-a="100">+100</button><button class="chip" data-a="500">+500</button><button class="chip" data-a="half">半分</button><button class="chip" data-a="all">全額</button></div>
+    <div class="prow" style="margin-bottom:0"><span id="preview"></span><button id="go">▶ レース開始</button></div>
+    <div id="err"></div>
+  </section>
 </div>
 
 <script>
+// ===== 馬のデータ =====
+// v: 毎ターンの速さ（p=進んだ距離0〜100、r=0〜1の乱数）
+// st: 表示用の能力 [スピード, スタミナ, 運]（1〜5）
 const H=[
-{n:'もっちもち',c:'#D4537E',b:.9,w:3.2,l:3.5,t:'もちもちでバナナが効かない'},
-{n:'笹かまぼこ',c:'#1D9E75',b:1.05,w:2.4,l:4,t:'スタート爆速、すぐバテる'},
-{n:'ロジャー',c:'#378ADD',b:1,w:2.8,l:4.5,t:'いつでも安定'},
-{n:'冬夢',c:'#7F77DD',b:.88,w:4.5,l:3,t:'最後の直線で覚醒'},
-{n:'みお',c:'#BA7517',b:.95,w:6,l:2,t:'気分屋、事件を呼ぶ'}];
-const $=id=>document.getElementById(id),cv=$('cv'),ctx=cv.getContext('2d'),R=window.devicePixelRatio||1;
-cv.width=680*R;cv.height=340*R;ctx.scale(R,R);
-const X0=40,X1=640,LY=i=>138+i*42,px=p=>X0+p*(X1-X0)/100;
-let money=1000,best=1000,rc=0,pick=0,type=1,run=false,order=[],fx=[],banner={s:'',t:0},acc=0,last=0;
-let S=H.map(()=>({p:0,q:0,stun:0,rev:0,gone:0,boost:0,done:0,ph:0}));
-const crowd=[];for(let i=0;i<120;i++)crowd.push([20+Math.random()*640,52+Math.random()*44,['#D4537E','#378ADD','#EF9F27','#1D9E75','#7F77DD','#F1EFE8'][i%6]]);
+{n:'もっちもち',c:'#D4537E',t:'もちもちでバナナが効かない',st:[2,4,4],nob:true,v:(p,r)=>.9*(.6+r*.8)},
+{n:'笹かまぼこ',c:'#1D9E75',t:'スタート爆速、すぐバテる',st:[5,1,3],v:(p,r)=>1.05*(.6+r*.8)*(p<30?1.6:p>60?.7:1)},
+{n:'ロジャー',c:'#378ADD',t:'いつでも安定',st:[3,3,3],v:(p,r)=>.85+r*.3},
+{n:'冬夢',c:'#7F77DD',t:'最後の直線で覚醒',st:[2,5,3],v:(p,r)=>.88*(.6+r*.8)*(p>70?1.7:1)},
+{n:'みお',c:'#BA7517',t:'気分屋、事件を呼ぶ',st:[3,2,1],v:(p,r)=>.95*(.2+r*1.6)}];
 
-function cards(){
-  $('cards').innerHTML=H.map((h,i)=>`<button class="hc ${i==pick?'sel':''}" data-i="${i}"><div style="display:flex;align-items:center;gap:6px"><span style="width:18px;height:18px;border-radius:50%;background:${h.c};color:#fff;font-size:11px;display:flex;align-items:center;justify-content:center">${i+1}</span><span style="font-weight:500;font-size:14px">${h.n}</span></div><div style="font-size:12px;color:var(--text-secondary);margin:4px 0">${h.t}</div><div style="font-size:12px">1着 ${h.w}倍 / 最下位 ${h.l}倍</div></button>`).join('');
-  document.querySelectorAll('.hc').forEach(b=>b.onclick=()=>{if(run)return;pick=+b.dataset.i;cards()});
-}
-function stats(){$('money').textContent=money+'円';$('rc').textContent=rc;$('best').textContent=best+'円'}
-function say(s){banner={s,t:22};const d=document.createElement('div');d.textContent=s;$('log').prepend(d);while($('log').children.length>5)$('log').lastChild.remove()}
+// ===== 設定 =====
+const EVENT_RATE=.045;  // 1ターンあたりの事件発生率
+const RETURN=.85;       // 払戻率（85%）
+const SIM=5000;         // オッズ計算のシミュレーション回数
+const VW=680,VH=360,START=60,LEN=2400,FIN=START+LEN;
+const worldX=p=>START+p*LEN/100, LY=i=>141+i*42;
 
-$('bt1').onclick=()=>{type=1;$('bt1').classList.add('on');$('bt2').classList.remove('on')};
-$('bt2').onclick=()=>{type=2;$('bt2').classList.add('on');$('bt1').classList.remove('on')};
-$('half').onclick=()=>{$('amt').value=Math.max(1,Math.floor(money/2));$('err').textContent=''};
-$('all').onclick=()=>{$('amt').value=money;$('err').textContent=''};
-$('amt').oninput=()=>$('err').textContent='';
-
-function target(){const p=[0,1,2,3,4,4,4].filter(i=>!S[i].done&&!S[i].gone);return p.length?p[Math.floor(Math.random()*p.length)]:-1}
-function ev(){
-  const k=Math.floor(Math.random()*6),i=target();if(i<0)return;
-  const h=H[i],s=S[i],x=px(s.p),y=LY(i);
-  if(k==0){fx.push({k:'ban',x:x+14,y:y+10,t:40});if(i==0)say(`${h.n}、バナナを踏んだ！…もちもちボディで吸収！`);else{s.stun=10;say(`おーっと！${h.n}、バナナの皮で大スリップ！`)}}
-  else if(k==1){fx.push({k:'wind',t:20});S.forEach(z=>{if(!z.done)z.p=Math.max(0,z.p-4)});say('突風だー！全員押し戻される！')}
+// ===== レースの処理（画面と切り離してあるのでシミュレーションにも使う） =====
+function newRace(){return H.map(()=>({p:0,q:0,stun:0,rev:0,gone:0,boost:0,done:0,ph:0,mv:0}))}
+function pickTarget(S){const c=[0,1,2,3,4,4,4].filter(i=>!S[i].done&&!S[i].gone);return c.length?c[Math.floor(Math.random()*c.length)]:-1}
+function applyEvent(S,out){
+  const i=pickTarget(S);if(i<0)return;
+  const k=Math.floor(Math.random()*6),h=H[i],s=S[i],wx=worldX(s.p),y=LY(i);
+  const say=m=>out&&out.say(m),addFx=f=>out&&out.fx(f);
+  if(k==0){addFx({k:'ban',x:wx+16,y:y+10,t:40});if(h.nob)say(`${h.n}、バナナを踏んだ！…もちもちボディで吸収！`);else{s.stun=10;say(`おーっと！${h.n}、バナナの皮で大スリップ！`)}}
+  else if(k==1){addFx({k:'wind',t:20});S.forEach(z=>{if(!z.done)z.p=Math.max(0,z.p-4)});say('突風だー！全員押し戻される！')}
   else if(k==2){s.rev=12;say(`${h.n}、なぜか逆走を始めたー！`)}
   else if(k==3){s.gone=20;say(`UFO出現！${h.n}がさらわれた！`)}
-  else if(k==4){s.stun=15;fx.push({k:'met',x:x+30,y,t:20});say(`隕石落下！${h.n}の目の前に大穴が！`)}
+  else if(k==4){s.stun=15;addFx({k:'met',x:wx+34,y,t:20});say(`隕石落下！${h.n}の目の前に大穴が！`)}
   else{s.boost=10;say(`${h.n}、謎のにんじんを拾って加速！`)}
 }
-function tick(){
-  if(Math.random()<.045)ev();
-  fx.forEach(f=>f.t--);fx=fx.filter(f=>f.t>0);if(banner.t)banner.t--;
+function step(S,ord,out){
+  const say=m=>out&&out.say(m);
+  S.forEach(s=>{s.q=s.p;s.mv=0});
+  if(Math.random()<EVENT_RATE)applyEvent(S,out);
+  const fin=[];
   S.forEach((s,i)=>{
-    const h=H[i];s.q=s.p;s.mv=0;if(s.done)return;
-    if(s.gone){s.gone--;if(!s.gone)say(`${h.n}、UFOから帰ってきた！`);return}
+    if(s.done)return;
+    if(s.gone){s.gone--;if(!s.gone)say(`${H[i].n}、UFOから帰ってきた！`);return}
     if(s.stun){s.stun--;return}
-    let r=Math.random(),v=h.b*(.6+r*.8);
-    if(i==1)v*=s.p<30?1.6:s.p>60?.7:1;
-    if(i==2)v=h.b*(.85+r*.3);
-    if(i==3&&s.p>70)v*=1.7;
-    if(i==4)v=h.b*(.2+r*1.6);
+    let v=H[i].v(s.p,Math.random());
     if(s.boost){s.boost--;v*=1.8}
     if(s.rev){s.rev--;v=-v*.6}
     s.mv=v;s.p=Math.max(0,s.p+v*.85);
-    if(s.p>=100){s.p=100;s.done=1;order.push(i);say(`${h.n}、${order.length}着でゴール！`)}
+    if(s.p>=100)fin.push([i,s.p]);
   });
-  if(order.length==5)finish();
+  // 同じターンにゴールした馬は、ゴールラインをより深く越えた方が上の着順
+  fin.sort((a,b)=>b[1]-a[1]||Math.random()-.5).forEach(([i])=>{S[i].p=100;S[i].done=1;ord.push(i);say(`${H[i].n}、${ord.length}着でゴール！`)});
 }
+
+// ===== オッズ計算（裏でレースを何千回も走らせて実際の勝率から決める） =====
+let WIN=[],LAST=[];
+function calcOdds(){
+  const w=H.map(()=>0),l=H.map(()=>0);
+  for(let n=0;n<SIM;n++){const S=newRace(),o=[];let g=0;while(o.length<5&&g++<3000)step(S,o,null);if(o.length<5)continue;w[o[0]]++;l[o[4]]++}
+  const odd=c=>Math.min(99.9,Math.max(1.1,Math.floor(RETURN*SIM/Math.max(c,1)*10)/10));
+  WIN=w.map(odd);LAST=l.map(odd);
+}
+
+// ===== 状態 =====
+const $=id=>document.getElementById(id),cv=$('cv'),ctx=cv.getContext('2d'),DPR=window.devicePixelRatio||1;
+cv.width=VW*DPR;cv.height=VH*DPR;ctx.scale(DPR,DPR);
+const F='"Hiragino Sans","Noto Sans JP",system-ui,sans-serif';
+let money=1000,best=1000,rc=0,pick=0,type=1,bet=0,betPick=0,betType=1;
+let phase='idle',S=newRace(),order=[],fx=[],banner={s:'',t:0},acc=0,last=0,cam=0,gate=0,cdStart=0,resultAt=0;
+const OUT={say:m=>say(m),fx:f=>fx.push(f)};
+const crowd=[];for(let x=0;x<FIN*.6+VW+60;x+=4)crowd.push([x,52+Math.random()*44,['#D4537E','#378ADD','#EF9F27','#1D9E75','#7F77DD','#F1EFE8'][Math.floor(Math.random()*6)]]);
+
+// ===== 保存（ブラウザに所持金を記録） =====
+const KEY='chaos-horse-race';
+function save(){try{localStorage.setItem(KEY,JSON.stringify({money,best,rc}))}catch(e){}}
+function load(){try{const d=JSON.parse(localStorage.getItem(KEY));if(d&&typeof d.money=='number'){money=d.money;best=d.best||d.money;rc=d.rc||0}}catch(e){}}
+
+// ===== 画面（HTML部分） =====
+const yen=n=>n.toLocaleString()+'円';
+const busy=()=>phase=='count'||phase=='race';
+function stats(){$('money').textContent=yen(money);$('rc').textContent=rc;$('best').textContent=yen(best)}
+function animMoney(a,b){const st=performance.now();const f=t=>{const k=Math.min(1,Math.max(0,(t-st)/900)),e=1-Math.pow(1-k,3);$('money').textContent=yen(Math.round(a+(b-a)*e));if(k<1)requestAnimationFrame(f)};requestAnimationFrame(f)}
+function say(s){banner={s,t:22};const d=document.createElement('div');d.textContent=s;$('log').prepend(d);while($('log').children.length>5)$('log').lastChild.remove()}
+function segs(n){let s='';for(let k=0;k<5;k++)s+=`<i class="${k<n?'on':''}"></i>`;return `<span class="bar">${s}</span>`}
+function renderBoard(){
+  const dis=busy()?'disabled':'';
+  $('rows').innerHTML=H.map((h,i)=>`<button class="row ${i==pick?'sel':''}" data-i="${i}" ${dis}><span class="num" style="background:${h.c}">${i+1}</span><span class="info"><span class="nm">${h.n}</span><span class="tr">${h.t}</span><span class="bars"><span>速${segs(h.st[0])}</span><span>持${segs(h.st[1])}</span><span>運${segs(h.st[2])}</span></span></span><span class="ow">${WIN[i].toFixed(1)}</span><span class="ol">${LAST[i].toFixed(1)}</span></button>`).join('');
+  document.querySelectorAll('.row').forEach(b=>b.onclick=()=>{if(busy())return;pick=+b.dataset.i;renderBoard();preview()});
+  $('pickLabel').textContent=`選択中：${pick+1} ${H[pick].n}`;
+}
+function preview(){
+  const a=Math.floor(+$('amt').value),odd=type==1?WIN[pick]:LAST[pick];
+  $('preview').textContent=a>0?`当たれば ${yen(Math.floor(a*odd))}（${odd.toFixed(1)}倍）`:'賭け金を入力してください';
+}
+// レース中は賭けに関わる操作を全部ロック
+function setLock(){const b=busy();['bt1','bt2','amt','reset','go'].forEach(id=>$(id).disabled=b);document.querySelectorAll('.chip').forEach(c=>c.disabled=b);renderBoard()}
+
+$('bt1').onclick=()=>{if(busy())return;type=1;$('bt1').classList.add('on');$('bt2').classList.remove('on');preview()};
+$('bt2').onclick=()=>{if(busy())return;type=2;$('bt2').classList.add('on');$('bt1').classList.remove('on');preview()};
+document.querySelectorAll('.chip').forEach(c=>c.onclick=()=>{
+  if(busy())return;const a=c.dataset.a,cur=Math.floor(+$('amt').value)||0;
+  const v=a=='half'?Math.floor(money/2):a=='all'?money:cur+(+a);
+  $('amt').value=Math.max(1,Math.min(v,money));$('err').textContent='';preview();
+});
+$('amt').oninput=()=>{$('err').textContent='';preview()};
+$('reset').onclick=()=>{if(busy())return;if(confirm('所持金を1000円に戻して最初からやり直しますか？'))resetAll()};
+$('go').onclick=()=>{
+  if(busy())return;
+  if(money<=0){resetAll();return}
+  const a=Math.floor(+$('amt').value);
+  if(!a||a<1){$('err').textContent='賭け金を1円以上で入力してください';return}
+  if(a>money){$('err').textContent='所持金より多くは賭けられません';return}
+  money-=a;bet=a;betPick=pick;betType=type;save();stats();
+  S=newRace();order=[];fx=[];acc=0;cam=0;gate=0;banner={s:'',t:0};
+  $('log').innerHTML='';$('res').textContent='';
+  say(`${H[pick].n}の${type==1?'1着':'最下位'}に${yen(a)}！ まもなく発走`);
+  phase='count';cdStart=performance.now();setLock();
+};
+function finish(){
+  phase='result';resultAt=last;rc++;
+  const win=betType==1?order[0]==betPick:order[4]==betPick,odd=betType==1?WIN[betPick]:LAST[betPick],before=money;
+  if(win){const g=Math.floor(bet*odd);money+=g;$('res').innerHTML=`<span style="color:var(--text-success)">的中！ ${yen(g)}ゲット</span>`;banner={s:`的中！ +${yen(g)}`,t:1e9}}
+  else{$('res').innerHTML=`<span style="color:var(--text-danger)">ハズレ… 1着は${H[order[0]].n}、最下位は${H[order[4]].n}</span>`;banner={s:'ハズレ…',t:1e9}}
+  best=Math.max(best,money);save();animMoney(before,money);$('rc').textContent=rc;$('best').textContent=yen(best);
+  if(money<=0){$('res').innerHTML+='<div style="margin-top:4px;color:var(--text-primary)">所持金がなくなった。ゲームオーバー</div>';$('go').textContent='↻ 最初から'}
+  $('amt').value=Math.max(1,Math.min(Math.floor(+$('amt').value)||100,money));
+  setLock();preview();
+}
+function resetAll(){
+  money=1000;best=1000;rc=0;save();stats();phase='idle';S=newRace();order=[];fx=[];cam=0;gate=0;banner={s:'',t:0};
+  $('log').innerHTML='';$('res').textContent='';$('go').textContent='▶ レース開始';$('amt').value=100;setLock();preview();
+}
+
+// ===== 描画（キャンバス部分） =====
+function rr(x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath()}
+function txt(s,x,y,size,color,weight=500){ctx.font=`${weight} ${size}px ${F}`;ctx.fillStyle=color;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(s,x,y)}
 function bg(){
-  ctx.fillStyle='#E6F1FB';ctx.fillRect(0,0,680,110);
-  ctx.fillStyle='#C0DD97';ctx.beginPath();ctx.moveTo(0,60);ctx.quadraticCurveTo(170,20,340,55);ctx.quadraticCurveTo(510,25,680,50);ctx.lineTo(680,110);ctx.lineTo(0,110);ctx.fill();
-  ctx.fillStyle='#D3D1C7';ctx.fillRect(10,46,660,56);ctx.fillStyle='#888780';ctx.fillRect(4,38,672,10);
-  crowd.forEach(([x,y,c])=>{ctx.fillStyle=c;ctx.beginPath();ctx.arc(x,y+Math.sin(last/200+x)*(run?1.5:0),3,0,7);ctx.fill()});
-  ctx.fillStyle='#97C459';ctx.fillRect(0,110,680,230);
-  for(let i=0;i<5;i++){ctx.fillStyle=i%2?'#97C459':'#8BBB4E';ctx.fillRect(0,LY(i)-21,680,42)}
-  ctx.fillStyle='#fff';ctx.fillRect(0,113,680,3);ctx.fillRect(0,328,680,3);ctx.fillRect(X0-2,117,3,210);
-  for(let r=0;r<26;r++)for(let c=0;c<2;c++){ctx.fillStyle=(r+c)%2?'#2C2C2A':'#fff';ctx.fillRect(X1+12+c*8,117+r*8,8,8)}
-  for(let i=0;i<5;i++){ctx.fillStyle=H[i].c;ctx.beginPath();ctx.arc(14,LY(i),9,0,7);ctx.fill();ctx.fillStyle='#fff';ctx.font='500 11px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(i+1,14,LY(i)+1)}
+  ctx.fillStyle='#E6F1FB';ctx.fillRect(0,0,VW,120);
+  ctx.fillStyle='#C0DD97';ctx.beginPath();ctx.moveTo(0,120);for(let x=0;x<=VW;x+=20)ctx.lineTo(x,62+Math.sin((x+cam*.2)/90)*12);ctx.lineTo(VW,120);ctx.fill();
+  ctx.fillStyle='#D3D1C7';ctx.fillRect(0,46,VW,58);
+  const o=cam*.6;
+  ctx.fillStyle='#B4B2A9';for(let x=-(o%160);x<VW;x+=160)ctx.fillRect(x,40,6,64);
+  ctx.fillStyle='#888780';ctx.fillRect(0,36,VW,10);
+  crowd.forEach(([x,y,c])=>{const sx=x-o;if(sx<-4||sx>VW+4)return;ctx.fillStyle=c;ctx.beginPath();ctx.arc(sx,y+(phase=='race'?Math.sin(last/180+x)*1.5:0),3,0,7);ctx.fill()});
+  ctx.fillStyle='#97C459';ctx.fillRect(0,104,VW,VH-104);
+  for(let i=0;i<5;i++){ctx.fillStyle=i%2?'#97C459':'#8BBB4E';ctx.fillRect(0,LY(i)-21,VW,42)}
+  ctx.fillStyle='#fff';ctx.fillRect(0,117,VW,3);ctx.fillRect(0,331,VW,3);
+  for(let x=Math.floor(cam/50)*50;x<cam+VW+50;x+=50){const sx=x-cam;ctx.fillRect(sx,112,3,8);ctx.fillRect(sx,331,3,7)}
 }
-function horse(x,y,c,ph,flip,a){
-  ctx.save();ctx.globalAlpha=a;ctx.translate(x,y);if(flip)ctx.scale(-1,1);const d='#2C2C2A';
+function course(){
+  const sx=START-cam;
+  ctx.fillStyle='#fff';ctx.fillRect(sx-2,120,3,210);
+  [2000,1600,1200,800,400].forEach(m=>{const x=FIN-m-cam;if(x<-40||x>VW+40)return;ctx.fillStyle='#fff';rr(x-27,94,54,16,4);ctx.fill();txt(`残り${m}m`,x,102,10,'#2C2C2A');ctx.fillRect(x-1,110,2,10)});
+  const gx=FIN-cam;
+  if(gx>-30&&gx<VW+30){
+    for(let r=0;r<26;r++)for(let c=0;c<2;c++){ctx.fillStyle=(r+c)%2?'#2C2C2A':'#fff';ctx.fillRect(gx+c*8,121+r*8,8,8)}
+    ctx.fillStyle='#E24B4A';rr(gx-14,90,44,20,4);ctx.fill();txt('ゴール',gx+8,100,11,'#fff');
+  }
+  const gtx=START+30-cam;
+  ctx.fillStyle='#5F5E5A';ctx.fillRect(gtx-52,106,58,10);
+  ctx.fillStyle='#888780';for(let i=0;i<=5;i++)ctx.fillRect(gtx-52,120+i*42-1,58,2);
+  if(gate<1){const lift=gate*70;for(let i=0;i<5;i++){ctx.fillStyle='#F1EFE8';ctx.fillRect(gtx,LY(i)-19-lift,6,38);ctx.fillStyle='#888780';ctx.fillRect(gtx,LY(i)-5-lift,6,4)}}
+}
+function horse(x,y,c,ph,flip,a,sc){
+  ctx.save();ctx.globalAlpha=a;ctx.translate(x,y);ctx.scale(flip?-sc:sc,sc);const d='#2C2C2A';
   ctx.lineCap='round';ctx.strokeStyle=d;ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(-16,-4);ctx.quadraticCurveTo(-27,-2+Math.sin(ph)*3,-24,8);ctx.stroke();
   ctx.strokeStyle=c;ctx.lineWidth=3.5;[[-11,0],[-7,3.14],[9,1.57],[13,4.71]].forEach(([lx,o])=>{const s=Math.sin(ph+o)*.55;ctx.beginPath();ctx.moveTo(lx,4);ctx.lineTo(lx+Math.sin(s)*12,4+Math.cos(s)*12);ctx.stroke()});
   ctx.fillStyle=c;ctx.beginPath();ctx.ellipse(0,0,17,8,0,0,7);ctx.fill();
@@ -137,48 +261,72 @@ function horse(x,y,c,ph,flip,a){
   ctx.fillStyle=c;ctx.beginPath();ctx.arc(4,-23,4.2,0,7);ctx.fill();ctx.fillStyle=d;ctx.fillRect(5,-24,5,2);
   ctx.restore();
 }
-function stars(x,y){for(let j=0;j<3;j++){const a=last/150+j*2.1;ctx.fillStyle='#EF9F27';ctx.beginPath();ctx.arc(x+Math.cos(a)*12,y+Math.sin(a)*4,2.5,0,7);ctx.fill()}}
-function draw(al){
-  bg();
+function effects(){
   fx.forEach(f=>{
-    if(f.k=='ban'){ctx.strokeStyle='#EF9F27';ctx.lineWidth=4;ctx.beginPath();ctx.arc(f.x,f.y-6,7,.3,2.8);ctx.stroke()}
-    if(f.k=='met'){if(f.t>12){const yy=f.y-(f.t-12)*16;ctx.strokeStyle='#F0997B';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(f.x-20,yy-30);ctx.lineTo(f.x,yy);ctx.stroke();ctx.fillStyle='#D85A30';ctx.beginPath();ctx.arc(f.x,yy,7,0,7);ctx.fill()}else{ctx.fillStyle='#444441';ctx.beginPath();ctx.ellipse(f.x,f.y+10,14,5,0,0,7);ctx.fill()}}
-    if(f.k=='wind'){ctx.strokeStyle='#fff';ctx.lineWidth=2;for(let j=0;j<9;j++){const x=680-((20-f.t)*40+j*90)%760,y=125+j*23;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+40,y);ctx.stroke()}}
+    if(f.k=='ban'){const x=f.x-cam;ctx.strokeStyle='#EF9F27';ctx.lineWidth=4;ctx.lineCap='round';ctx.beginPath();ctx.arc(x,f.y-6,7,.3,2.8);ctx.stroke()}
+    if(f.k=='met'){const x=f.x-cam;if(f.t>12){const yy=f.y-(f.t-12)*16;ctx.strokeStyle='#F0997B';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(x-20,yy-30);ctx.lineTo(x,yy);ctx.stroke();ctx.fillStyle='#D85A30';ctx.beginPath();ctx.arc(x,yy,7,0,7);ctx.fill()}else{ctx.fillStyle='#444441';ctx.beginPath();ctx.ellipse(x,f.y+10,14,5,0,0,7);ctx.fill()}}
+    if(f.k=='wind'){ctx.strokeStyle='#fff';ctx.lineWidth=2;for(let j=0;j<9;j++){const x=VW-((20-f.t)*40+j*90)%760,y=125+j*23;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+40,y);ctx.stroke()}}
   });
+}
+function horses(P){
   S.forEach((s,i)=>{
-    const h=H[i],p=s.q+(s.p-s.q)*al,x=px(p),y=LY(i)+2;
-    if(s.mv)s.ph+=Math.abs(s.mv)*.35;
+    const h=H[i],moving=phase=='race'&&s.mv,x=worldX(P[i])-cam,y=LY(i)+2+(moving?Math.sin(s.ph*2):0);
+    if(moving)s.ph+=Math.abs(s.mv)*.35;
+    if(x<-60||x>VW+60)return;
     if(s.gone){ctx.fillStyle='rgba(250,199,117,.45)';ctx.beginPath();ctx.moveTo(x-6,y-48);ctx.lineTo(x+6,y-48);ctx.lineTo(x+24,y+14);ctx.lineTo(x-24,y+14);ctx.fill()}
-    horse(x,y,h.c,s.ph,s.rev>0,s.gone?.25:1);
+    horse(x,y,h.c,s.ph,s.rev>0,s.gone?.25:1,1);
     if(s.gone){ctx.fillStyle='#85B7EB';ctx.beginPath();ctx.ellipse(x,y-54,9,8,0,3.14,0);ctx.fill();ctx.fillStyle='#888780';ctx.beginPath();ctx.ellipse(x,y-50,24,6,0,0,7);ctx.fill();ctx.fillStyle='#FAC775';[-14,0,14].forEach(o=>{ctx.beginPath();ctx.arc(x+o,y-50,2,0,7);ctx.fill()})}
-    if(s.stun)stars(x+6,y-32);
+    if(s.stun)for(let j=0;j<3;j++){const a=last/150+j*2.1;ctx.fillStyle='#EF9F27';ctx.beginPath();ctx.arc(x+6+Math.cos(a)*12,y-32+Math.sin(a)*4,2.5,0,7);ctx.fill()}
     if(s.boost){ctx.fillStyle='#D85A30';ctx.beginPath();ctx.moveTo(x+30,y-34);ctx.lineTo(x+42,y-38);ctx.lineTo(x+32,y-28);ctx.fill();ctx.fillStyle='#639922';ctx.fillRect(x+40,y-41,4,4)}
-    if(s.done){ctx.fillStyle='#fff';ctx.beginPath();ctx.roundRect(X1-34,y-30,26,16,4);ctx.fill();ctx.fillStyle='#2C2C2A';ctx.font='500 11px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(order.indexOf(i)+1+'着',X1-21,y-22)}
+    if(i==betPick&&phase!='idle'){ctx.fillStyle='#fff';ctx.beginPath();ctx.moveTo(x-5,y-44);ctx.lineTo(x+5,y-44);ctx.lineTo(x,y-37);ctx.fill()}
+    if(s.done){ctx.fillStyle='#fff';rr(x+34,y-10,30,16,4);ctx.fill();txt(order.indexOf(i)+1+'着',x+49,y-2,11,'#2C2C2A')}
   });
-  if(banner.t){ctx.font='500 15px sans-serif';const w=ctx.measureText(banner.s).width+28;ctx.fillStyle='rgba(255,255,255,.95)';ctx.beginPath();ctx.roundRect(340-w/2,8,w,28,8);ctx.fill();ctx.fillStyle='#2C2C2A';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(banner.s,340,22)}
 }
-function loop(t){const dt=Math.min(t-last,100);last=t;if(run){acc+=dt;while(acc>=100&&run){acc-=100;tick()}}draw(run?acc/100:1);requestAnimationFrame(loop)}
-function finish(){
-  run=false;rc++;const bet=+$('amt').dataset.b;
-  const win=type==1?order[0]==pick:order[4]==pick,odd=type==1?H[pick].w:H[pick].l;
-  if(win){const g=Math.round(bet*odd);money+=g;$('res').innerHTML=`<span style="color:var(--text-success)">的中！ ${g}円ゲット</span>`;banner={s:`的中！ ${g}円ゲット`,t:9999}}
-  else{$('res').innerHTML=`<span style="color:var(--text-danger)">ハズレ… 1着は${H[order[0]].n}、最下位は${H[order[4]].n}</span>`;banner={s:'ハズレ…',t:9999}}
-  best=Math.max(best,money);stats();
-  if(money<=0){$('res').innerHTML+='<div style="margin-top:6px;color:var(--text-primary)">所持金がなくなった。ゲームオーバー</div>';$('go').textContent='↻ 最初から'}
-  $('amt').value=Math.min(+$('amt').value||100,Math.max(money,1));
+function hud(P){
+  for(let i=0;i<5;i++){ctx.fillStyle=H[i].c;ctx.beginPath();ctx.arc(14,LY(i),9,0,7);ctx.fill();txt(i+1,14,LY(i)+1,11,'#fff')}
+  ctx.fillStyle='rgba(44,44,42,.85)';rr(16,339,648,14,7);ctx.fill();
+  ctx.fillStyle='#fff';ctx.fillRect(652,340,2,12);
+  S.forEach((s,i)=>{const x=24+P[i]/100*628;ctx.globalAlpha=s.gone?.3:1;ctx.fillStyle=H[i].c;ctx.beginPath();ctx.arc(x,346,5,0,7);ctx.fill();if(i==betPick&&phase!='idle'){ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.stroke()}ctx.globalAlpha=1});
 }
-$('go').onclick=()=>{
-  if(run)return;
-  if(money<=0){money=1000;best=1000;rc=0;stats();$('res').textContent='';$('log').innerHTML='';banner={s:'',t:0};S.forEach(s=>Object.assign(s,{p:0,q:0,done:0}));$('go').textContent='▶ レース開始';return}
-  const a=Math.floor(+$('amt').value);
-  if(!a||a<1){$('err').textContent='賭け金を1円以上で入力してください';return}
-  if(a>money){$('err').textContent='所持金より多くは賭けられません';return}
-  money-=a;$('amt').dataset.b=a;stats();order=[];fx=[];acc=0;
-  S=H.map(()=>({p:0,q:0,stun:0,rev:0,gone:0,boost:0,done:0,ph:0,mv:0}));
-  $('res').textContent='';$('log').innerHTML='';
-  say(`スタート！ ${H[pick].n}の${type==1?'1着':'最下位'}に${a}円！`);run=true;
-};
-cards();stats();requestAnimationFrame(loop);
+function podium(){
+  if(phase!='result'||order.length<5)return;
+  const k=Math.min(1,(last-resultAt-900)/400);if(k<=0)return;
+  ctx.save();ctx.globalAlpha=k;ctx.fillStyle='rgba(20,20,18,.7)';ctx.fillRect(0,0,VW,VH);
+  [[VW/2,90,'#FAC775'],[VW/2-115,64,'#D3D1C7'],[VW/2+115,46,'#F0997B']].forEach(([cx,hh,col],r)=>{
+    const i=order[r],top=300-hh;ctx.fillStyle=col;ctx.fillRect(cx-55,top,110,hh);
+    txt(r+1+'着',cx,top+16,17,'#2C2C2A');txt(H[i].n,cx,top+36,12,'#2C2C2A');
+    horse(cx-8,top-22,H[i].c,0,false,k,1.5);
+  });
+  txt(`最下位：${H[order[4]].n}`,VW/2,322,13,'#F1EFE8',400);
+  ctx.restore();
+}
+function overlay(){
+  if(banner.t>0){ctx.font=`500 15px ${F}`;const w=ctx.measureText(banner.s).width+28;ctx.fillStyle='rgba(255,255,255,.95)';rr(VW/2-w/2,8,w,28,8);ctx.fill();txt(banner.s,VW/2,22,15,'#2C2C2A')}
+  if(phase=='count'){const n=Math.max(1,3-Math.floor((last-cdStart)/1000));ctx.fillStyle='rgba(44,44,42,.75)';ctx.beginPath();ctx.arc(VW/2,215,42,0,7);ctx.fill();txt(n,VW/2,217,48,'#fff')}
+}
+function draw(al){
+  const P=S.map(s=>s.q+(s.p-s.q)*al);
+  const lead=Math.max(...P.map(p=>worldX(p)));
+  const tgt=(phase=='race'||phase=='result')?Math.max(0,Math.min(lead-420,FIN+90-VW)):0;
+  cam+=(tgt-cam)*.12;if(Math.abs(tgt-cam)<.5)cam=tgt;
+  bg();course();effects();horses(P);hud(P);podium();overlay();
+}
+
+// ===== メインループ =====
+function tickRace(){fx.forEach(f=>f.t--);fx=fx.filter(f=>f.t>0);if(banner.t>0&&banner.t<1e8)banner.t--;step(S,order,OUT);if(order.length==5)finish()}
+function loop(t){
+  const dt=Math.min(t-last,100);last=t;
+  if(phase=='count'&&t-cdStart>=3000){phase='race';acc=0;say('スタート！')}
+  if(phase=='race'){acc+=dt;while(acc>=100&&phase=='race'){acc-=100;tickRace()}}
+  if(phase=='race'||phase=='result')gate=Math.min(1,gate+dt/500);
+  draw(phase=='race'?acc/100:1);
+  requestAnimationFrame(loop);
+}
+
+// ===== 起動 =====
+calcOdds();load();stats();setLock();preview();
+if(money<=0)$('go').textContent='↻ 最初から';
+requestAnimationFrame(loop);
 </script>
 </body>
 </html>
